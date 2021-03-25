@@ -1,0 +1,95 @@
+* Z:\home\rahul\Downloads\Compressed\milestone3spice\milestone3_Final_Rahul.asc
+Vbatt in 0 PWL(0 12.6 {t1} 12.6 {t1+0.1m} 9.6) Rser=0.05
+Rload out 0 R=v(load)
+Vcontrol1 control1 0 PWL(0 {Vref1_5V} {t1} {Vref1_5V} {t1+0.1m} {Vref1_20V}) Rser=100
+Vcontrol2 control2 0 PWL(0 {Vref2_5V} {t1} {Vref2_5V} {t1+0.1m} {Vref2_20V}) Rser=100
+Vload load 0 PWL(0 2.5 {t1} 2.5 {t1+0.1m} 8.9 {t2} 8.9 {t2+1u} 6.7)
+M1 in N006 N004 N004 BSC0906NS
+M2 N004 N012 0 0 BSC0906NS
+M3 N002 N014 0 0 BSC093N04LS
+M4 out N007 N002 N002 BSC0906NS
+C1 out 0 47µ
+L1 N004 N005 Hc=10 Br=0.12 Bs=0.33 A=0.000023 Lm=0.0394 Lg=1420u N=15 Rser=11.6m
+XU1 N019 N001 N002 0 N009 driver Imax=3A Tdelay=30ns, IQ=1mA, Vuvl=8V
+XU2 N015 N003 N004 0 N008 driver Imax=3A Tdelay=30ns, IQ=1mA, Vuvl=8V
+R1 N007 N009 1
+R2 N006 N008 1
+XU3 in 0 N001 N002 aux_dcx n=1
+C2 N001 N002 10µ
+XU4 in 0 N003 N004 aux_dcx n=1
+C3 N004 N003 10µ
+XU5 N018 in 0 0 N011 driver Imax=3A Tdelay=30ns, IQ=1mA, Vuvl=8V
+XU6 N010 in 0 0 N013 driver Imax=3A Tdelay=30ns, IQ=1mA, Vuvl=8V
+R3 N014 N013 1
+R4 N012 N011 1
+XU7 N017 N015 N018 dead_time Td=30ns
+XU8 N023 N010 N019 dead_time Td=30ns
+XU9 N016 N017 PWM VM=5V, fs=400kHz Dmin=0.01, Dmax=0.99, Voffset=0
+C4 in 0 47µ
+R5 N028 N026 6.4k
+R6 N026 N027 100k
+C5 N026 N022 26.5p
+C6 N027 N022 589.5p
+XU11 control2 N026 in 0 N022 LT1215
+R7 out N028 30k
+R8 N028 0 10k
+XU12 control1 N021 in 0 N016 LT1215
+R9 N021 N020 100k
+R10 N024 N021 23.4k
+R11 N025 N024 2767
+C7 N020 N016 0.53n
+C8 N024 N021 0.99n
+XU10 N022 Vs N023 ramp CPM_modulator fs=400kHz, Va=0.575 Vcmax=1.5, Dmin=0, Dmax=0.99, Voffset=0
+XU14 N005 N002 in 0 Vs MAX4376 gain=20
+R12 N002 N005 5m
+R13 N025 0 3.32k
+R14 out N025 16.6k
+.model NMOS NMOS
+.model PMOS PMOS
+.lib C:\users\rahul\My Documents\LTspiceXVII\lib\cmp\standard.mos
+.lib switching.lib
+.tran 0 {Tend} {Tskip} 10ns startup uic
+.options reltol 0.0005
+* 3-cell LiPo battery model
+* 9.6-12.6. nominal 11.1
+.param t1=1m t2=2m Tend=3m
+.param Vref1_5V=0.834 Vref1_20V=5
+.param Vref2_5V=0.001 Vref2_20V=5
+* Control signals from the system power management microcontroller (up to two 0-5V analog signals)
+* USB bus model
+.param Ts=2.5u
+******* define times for steady-state operation and transient
+* OP1 steady state interval, 10 switching periods
+.meas start_5V param {t1-Tskip-10*Ts}
+.meas end_5V param {t1-Tskip}
+* OP2x steady state interval, 10 switching periods
+.meas start_20V param {Tend-Tskip-11*Ts}
+.meas end_20V param {Tend-Tskip-Ts}
+* step-load transient to OP2
+.meas start_load_transient param {t2-Tskip}
+.meas end_load_transient {Tend-Tskip-Ts}
+****** dc bus voltages at operating points 1 and 2
+.meas Vout_5V avg v(out) from start_5V to end_5V
+.meas Vout_20V avg v(out) from start_20V to end_20V
+****** battery and bus voltage ripples at operating point 2
+.meas Vin_ripple_20V pp v(in) from start_20V to end_20V
+.meas Vout_ripple_20V pp v(out) from start_20V to end_20V
+****** efficiency at operating point 2
+.meas Pin_20V avg -v(in)*i(Vbatt) from start_20V to end_20V
+.meas Pout_20V avg v(out)*i(Rload) from start_20V to end_20V
+.meas eff_20V param 100*Pout_20V/Pin_20V
+****** minimum voltage after step load transient at t2
+.meas Vout_20_min min v(out) from start_load_transient to end_load_transient
+* Adjust these time parameters so that:\nAt t1 the converter is in steady state at OP1: 5V output\nAt t2 the converter is in steady state at 20V output, 2.25A\nStep load transient occurs at t2\nAt Tend the converter  is in steady state at OP2: 20V output. 3A
+* Define switching period(s) Ts here
+* Measurement commands
+* Simulation commands (no need to change these)
+* Define Vcontrol1 control levels for the 3 operating model
+* Define Vcontrol2 control levels for the 3 operating model
+* Simulation commands and parameters
+* Power Electronics Specialization\nUniversity of Colorado Boulder
+* Do not change the measurement commands
+.param Tskip=0.5m
+.lib LTC.lib
+.backanno
+.end
