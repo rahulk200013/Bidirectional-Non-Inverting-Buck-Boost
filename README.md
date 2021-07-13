@@ -9,3 +9,5 @@ Specification of the converter:
 4. Output Ripple: +- 0.3V
 
 To know more about the designing of the converter, click [here](https://github.com/rahulk200013/Bidirectional-Non-Inverting-Buck-Boost/files/6206199/Explanation.pdf).
+
+To run the simulation,open launch_simulation.asc in Ltspice.
